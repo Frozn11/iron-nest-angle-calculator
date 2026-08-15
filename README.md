@@ -2,6 +2,10 @@
 
 A simple console tool that calculates the firing angle and minimum charges needed to hit a target at a given distance.
 
+## Download
+
+Prebuilt binaries are available on the [Releases page](https://github.com/Frozn11/iron-nest-angle-calculator/releases) for Windows, Linux, and macOS - both standalone (no .NET required) and framework-dependent (requires [.NET Runtime](https://dotnet.microsoft.com/download) installed) versions.
+
 ## How it works
 
 Enter a target distance (in km) and the number of charges you want to use, and the tool calculates the elevation angle to set on your gun.
@@ -51,7 +55,7 @@ Left gun, set angle to 48, charges needed 3
 
 ## Requirements
 
-- .NET (any recent version supporting `System.Linq` and top-level console apps)
+- .NET (any recent version supporting `System.Linq` and top-level console apps) - only needed if building from source or using a framework-dependent release build.
 
 ## Build & Run
 

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.36631.11
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iron_nest_angle_calculator", "Calculate_angle_via_distance_Iron_Nest\Iron_nest_angle_calculator.csproj", "{976F3581-B48D-4967-A3F2-67C0DB2ADDA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Iron_nest_angle_calculator", "Iron_nest_angle_calculator.csproj", "{70A54E0B-0724-483E-8638-9B7AC841DD03}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{976F3581-B48D-4967-A3F2-67C0DB2ADDA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{976F3581-B48D-4967-A3F2-67C0DB2ADDA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{976F3581-B48D-4967-A3F2-67C0DB2ADDA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{976F3581-B48D-4967-A3F2-67C0DB2ADDA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70A54E0B-0724-483E-8638-9B7AC841DD03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70A54E0B-0724-483E-8638-9B7AC841DD03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70A54E0B-0724-483E-8638-9B7AC841DD03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70A54E0B-0724-483E-8638-9B7AC841DD03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {AFE91433-E563-4ED6-A4C3-3AF9885FBEF6}
+		SolutionGuid = {6DB1F4C4-6967-447E-B1AC-E10125B2F086}
 	EndGlobalSection
 EndGlobal

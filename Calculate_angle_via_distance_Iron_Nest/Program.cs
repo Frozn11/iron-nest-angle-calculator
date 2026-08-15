@@ -16,8 +16,6 @@ namespace Iron_nest_angle_calculator {
             return alngle;
         }
 
-
-
         // the min amout charges needed to shoot 
         // from 5 km to 30 km
         //      charges 1 = 5

@@ -1,6 +1,6 @@
 # Iron Nest Angle Calculator
 
-A simple console tool that calculates the firing angle and minimum charges needed to hit a target at a given distance.
+A console tool that calculates the firing (vertical) angle and minimum charges needed to hit a target at a given distance, with optional horizontal angle tracking and a saved-shots list.
 
 ## Download
 
@@ -8,13 +8,15 @@ Prebuilt binaries are available on the [Releases page](https://github.com/Frozn1
 
 ## How it works
 
-Enter a target distance (in km) and the number of charges you want to use, and the tool calculates the elevation angle to set on your gun.
+Enter a target distance (in km) and the number of charges you want to use, and the tool calculates the vertical elevation angle to set on your gun. You can also optionally set a gun side and a horizontal angle, and every calculated shot is saved to a list for reference.
 
 **Formula:**
 
 ```
 Elevation = (Distance in km × 12) / Charges
 ```
+
+The result is rounded down to 2 decimal places.
 
 Credit: formula sourced from the [Iron Nest subreddit](https://www.reddit.com/r/IronNest/comments/1vjgvbb/math/).
 
@@ -31,27 +33,54 @@ Each charge level has a minimum range it can effectively reach:
 | 5       | 20-25              |
 | 6       | 25-30              |
 
-The tool automatically calculates the minimum number of charges required for the distance you enter, and won't let you pick fewer than that.
+The tool automatically calculates the minimum number of charges required for the distance you enter, and won't let you pick fewer than that. Distance is capped between 0.5 km and 30 km.
 
 ## Usage
 
 1. Run the program.
 2. Select which gun you're aiming (`Left` / `L`, `Right` / `R`, or skip).
-3. Enter the target distance in km (minimum 0.5 km).
-4. Enter the number of charges to use (must be between the calculated minimum and 6).
-5. The tool prints the elevation angle to set and the charges used.
+3. Optionally set a horizontal angle from 0.00 to 360.00 (or skip).
+4. Enter the target distance in km (min 0.5 km, max 30 km).
+5. Enter the number of charges to use (must be between the calculated minimum and 6).
+6. The tool prints the vertical angle, horizontal angle, and charges used, and saves the shot to the list.
 
 **Example:**
 
 ```
+Use /help for list of commands
 Selcet Gun: Left(L) or Right(R) (can be skiped if not needed)
 > L
-Enter distance in km (min: 0.5 km):
+Set horizontal angle from 0.00 to 360.00 (can be skiped if not needed)
+> 90
+Enter distance in km (min: 0.5 km, max: 30 km):
 > 12
 Enter amout of charges (min: 3, max: 6)
 > 3
-Left gun, set angle to 48, charges needed 3
+----------------------------------------
+  Left gun,
+  vertical angle 48.00,
+  horizontal angle 90,
+  charges 3
+
+--------Saved-List--------
+0.Left gun,
+  vertical angle 48.00,
+  horizontal angle 90,
+  charges 3
+----------------------------------------
 ```
+
+## Commands
+
+Type any of these at an input prompt (starting with `/`) instead of a value:
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Shows the list of available commands |
+| `/list` | Shows the list of saved shots |
+| `/remove <index>` | Removes a saved shot by index (prompts for one if omitted) |
+| `/savelist <true/false>` | Enables/disables saving new shots to the list (existing entries are kept) |
+| `/alwaysshowlist <true/false>` | Toggles whether the saved list is printed after every shot |
 
 ## Requirements
 

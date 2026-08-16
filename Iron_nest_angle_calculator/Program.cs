@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Calculate_angle_via_distance_Iron_Nest;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Iron_nest_angle_calculator {
     class Program {
-        enum Gun {
-            None,
-            Left,
-            Right
-        }
+        static List<SavedAngle> savedAnglesList = new List<SavedAngle>();
 
         // got this formula from Reddit https://www.reddit.com/r/IronNest/comments/1vjgvbb/math/
         // Elevation = (Distance in km x  12) / charges
@@ -36,13 +35,32 @@ namespace Iron_nest_angle_calculator {
             return minCharges;
         }
 
+        static void SaveNewAngle(float angle, int charges, Gun gunSelected) {
+            SavedAngle newSavedAngle = new SavedAngle();
+            newSavedAngle.angle = angle;
+            newSavedAngle.charges = charges;
+            newSavedAngle.gunSelected = gunSelected;
+            savedAnglesList.Add(newSavedAngle);
+        }
+
+         // Console.WriteLine($"{gunSelected} gun, set angle to {angle}, charges needed {charges}");
+         static string ReturnSaveAnglesList() {
+            string text = "";
+            for (int i = 0; i < savedAnglesList.Count; i++) {
+                SavedAngle savedAngle = savedAnglesList[i];
+                text += $"{i}. {savedAngle.gunSelected}, set angle to {savedAngle.angle}, charges needed {savedAngle.charges}\n";
+            }
+            return text;
+         }
+
         static void Main(string[] args) {
             float km;
             int charges;
             Gun gunSelected;
 
-            while (true) {
+            Console.WriteLine("Use /help for list of commands");
 
+            while (true) {
                 // User Selected gun
                 while (true) {
                     Console.WriteLine("Selcet Gun: Left(L) or Right(R) (can be skiped if not needed)");
@@ -51,7 +69,6 @@ namespace Iron_nest_angle_calculator {
                     if (input.ToLower() == "right" || input.ToLower() == "r") gunSelected = Gun.Right;
                     else if (input.ToLower() == "left" || input.ToLower() == "l") gunSelected = Gun.Left;
                     else gunSelected = Gun.None;
-
                     break;
                 }
 
@@ -87,10 +104,14 @@ namespace Iron_nest_angle_calculator {
                     break;
                 }
 
+
                 // Output
                 float angle = Calc_angle(km, charges);
-                Console.WriteLine($"{gunSelected} gun, set angle to {angle}, charges needed {charges}");
-                Console.WriteLine();
+                SaveNewAngle(angle, charges, gunSelected);
+
+                Console.WriteLine($"{gunSelected} gun, set angle to {angle}, charges needed {charges}\n");
+                Console.WriteLine("--------Saved-List--------");
+                Console.WriteLine(ReturnSaveAnglesList());
                 Console.WriteLine(string.Concat(Enumerable.Repeat("-", 40)));
                 Console.WriteLine();
 

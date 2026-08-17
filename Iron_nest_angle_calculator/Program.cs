@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Iron_nest_angle_calculator {
-class CommandEnteredException : Exception { }
+    class CommandEnteredException : Exception { }
     class Program {
         static List<SavedAngle> savedAnglesList = new List<SavedAngle>();
         static int maxSaveList = 6;
         static bool saveList = true;
         static bool alwaysShowList = true;
-        
+
         // got this formula from Reddit https://www.reddit.com/r/IronNest/comments/1vjgvbb/math/
         // also can be get from Iron Nest wiki https://ironnestwiki.com/calculator
         // Elevation = (Distance in km x  12) / charges
@@ -220,7 +220,7 @@ class CommandEnteredException : Exception { }
             Console.WriteLine();
         }
 
-        static void Main(string[] args) {
+        static void Logic() {
             float km;
             float hozAngle = -1;
             int charges;
@@ -253,7 +253,7 @@ class CommandEnteredException : Exception { }
                                 break;
                             }
                             else {
-                                string errorTextHozAngle = hozAngle > 360 ? $"The horizontal angle can't be bigger than 360.00" 
+                                string errorTextHozAngle = hozAngle > 360 ? $"The horizontal angle can't be bigger than 360.00"
                                     : $"The horizontal angle can't be smaller than 0.00, you entered {hozAngle:F2}";
                                 WriteMarkup($"%RED%Error%RED%: {errorTextHozAngle}");
                                 continue;
@@ -270,7 +270,7 @@ class CommandEnteredException : Exception { }
                         float.TryParse(CustomReadLine(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out km);
 
                         if (km < 0.0005f || km > 30f) {
-                            string errorTextDistance = km < 30 ? $"The Distance can't be smaller than 0.0005 km, you entered {km.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}" 
+                            string errorTextDistance = km < 30 ? $"The Distance can't be smaller than 0.0005 km, you entered {km.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}"
                                 : $"The Distance can't be bigger than 30.00 km, you entered {km.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}";
                             WriteMarkup($"%RED%Error%RED%: {errorTextDistance}");
                             continue;
@@ -319,6 +319,15 @@ class CommandEnteredException : Exception { }
                     continue;
                 }
             }
+        }
+
+    static void Main(string[] args) {
+            if (args.Length > 0 && args[0] == "--build-release") {
+                BuildReleaseApp.Run();
+                return;
+            }
+
+            Logic();
         }
     }
 }

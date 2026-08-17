@@ -20,6 +20,11 @@ class CommandEnteredException : Exception { }
             return angle;
         }
 
+        // Flight Time = (Shot Distance / Max Distance for Charges) × 38 seconds
+        static float Calc_FlyTime(float distnace, int charges) {
+            throw new NotImplementedException();
+        }
+
         // the min amout charges needed to shoot 
         // from 5 km to 30 km
         //      charges 1 = 5
@@ -31,12 +36,9 @@ class CommandEnteredException : Exception { }
         static int Get_Min_Charges(float km) {
             int minCharges = 1;
 
-            if (km > 5 && km < 15) minCharges = 2;
-            else if (km > 10 && km < 20) minCharges = 3;
-            else if (km > 15 && km < 25) minCharges = 4;
-            else if (km > 20 && km < 30) minCharges = 5;
-            else if (km > 25) minCharges = 6;
-
+            while (Calc_angle(km, minCharges) > 60) {
+                minCharges++;
+            }
             return minCharges;
         }
 

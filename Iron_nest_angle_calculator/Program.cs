@@ -2,17 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.InteropServices;
 
 namespace Iron_nest_angle_calculator {
 class CommandEnteredException : Exception { }
     class Program {
         static List<SavedAngle> savedAnglesList = new List<SavedAngle>();
+        static int maxSaveList = 6;
         static bool saveList = true;
         static bool alwaysShowList = true;
-
+        
         // got this formula from Reddit https://www.reddit.com/r/IronNest/comments/1vjgvbb/math/
+        // also can be get from Iron Nest wiki https://ironnestwiki.com/calculator
         // Elevation = (Distance in km x  12) / charges
         static float Calc_angle(float distnace, int charges) {
             float angle = (distnace * 12) / charges;
@@ -20,9 +20,14 @@ class CommandEnteredException : Exception { }
             return angle;
         }
 
-        // Flight Time = (Shot Distance / Max Distance for Charges) × 38 seconds
-        static float Calc_FlyTime(float distnace, int charges) {
-            throw new NotImplementedException();
+        // got formula from Iron Nest wiki https://ironnestwiki.com/calculator
+        // SHELL FLIGHT TIME = TARGET DISTANCE ÷ ADJUSTED SHELL SPEED
+        // u = (POWDER CHARGES − 1) ÷ 5
+        // ADJUSTED SHELL SPEED = 0.7 × [0.3 + 0.7 × (3u² − 2u³)]
+        static float Calc_TimeTravel(float distnace, int charges) {
+            float u = (charges - 1) / 5f;
+            float adjShellSpeed = 0.7f * (0.3f + 0.7f * (3f * MathF.Pow(u, 2f) - 2f * MathF.Pow(u, 3)));
+            return distnace / adjShellSpeed;
         }
 
         // the min amout charges needed to shoot 
@@ -42,13 +47,17 @@ class CommandEnteredException : Exception { }
             return minCharges;
         }
 
-        static void SaveNewAngle(float velAngle, string hozAngle, int charges, Gun gunSelected) {
+        static void SaveNewAngle(float velAngle, string hozAngle, int charges, Gun gunSelected, float timeToTrivel) {
             if (!saveList) return;
+            if (savedAnglesList.Count > maxSaveList) {
+                savedAnglesList.RemoveAt(0);
+            }
             SavedAngle newSavedAngle = new() {
                 velAngle = velAngle,
                 hozAngle = hozAngle,
                 charges = charges,
-                gunSelected = gunSelected
+                gunSelected = gunSelected,
+                timeToTrivel = timeToTrivel
             };
             savedAnglesList.Add(newSavedAngle);
         }
@@ -62,7 +71,8 @@ class CommandEnteredException : Exception { }
                 text += $"{i}.{savedAngle.gunSelected} gun,\n" +
                         $"  vertical angle {savedAngle.velAngle.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)},\n" +
                         $"  horizontal angle {savedAngle.hozAngle},\n" +
-                        $"  charges {savedAngle.charges}\n";
+                        $"  charges {savedAngle.charges}\n" +
+                        $"  time to travel {savedAngle.timeToTrivel.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} secondes\n";
                 if (i + 1 < savedAnglesList.Count) {
                     text += " .\n";
                 }
@@ -120,6 +130,7 @@ class CommandEnteredException : Exception { }
                         "\n  /list - shows list of saved agnles" +
                         "\n  /savelist <true/false> - enables/disables saving angles, but keeps old angles" +
                         "\n  /alwaysshowlist <true/false> - if set to true shows saved list every time" +
+                        "\n  /setmaxlist <index> - makes so it removes old saved angles from it when it get's bigger that max size list" +
                         "\n------------------------");
                     break;
                 case "/remove":
@@ -144,6 +155,20 @@ class CommandEnteredException : Exception { }
                         Console.WriteLine("wrong value");
                     }
                     break;
+                case "/setmaxlist":
+                    if (int.TryParse(args, out int value) && value > 0) {
+                        maxSaveList = value;
+                        while (savedAnglesList.Count > maxSaveList) {
+                            savedAnglesList.RemoveAt(0);
+                        }
+                        Console.WriteLine($"New max list set to: {maxSaveList}");
+                        break;
+                    }
+                    else {
+                        WriteMarkup("%RED%Error%RED%");
+                        break;
+                    }
+
                 default:
                     WriteMarkup($"%RED%Unknown command%RED%: {command}");
                     break;
@@ -219,15 +244,17 @@ class CommandEnteredException : Exception { }
                     // User enters hozAngle (optional for user)
                     while (true) {
                         Console.WriteLine("Set horizontal angle from 0.00 to 360.00 (can be skiped if not needed)");
+
                         float.TryParse(CustomReadLine(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out hozAngle);
-                        string hozAng = hozAngle > 0 ? hozAngle.ToString() : null;
+                        string hozAng = hozAngle > 0 ? hozAngle.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : null;
+
                         if (hozAng != null) {
                             if (hozAngle > 0 && hozAngle <= 360) {
                                 break;
                             }
                             else {
                                 string errorTextHozAngle = hozAngle > 360 ? $"The horizontal angle can't be bigger than 360.00" 
-                                    : $"The horizontal angle can't be smaller than 0";
+                                    : $"The horizontal angle can't be smaller than 0.00, you entered {hozAngle:F2}";
                                 WriteMarkup($"%RED%Error%RED%: {errorTextHozAngle}");
                                 continue;
                             }
@@ -238,13 +265,13 @@ class CommandEnteredException : Exception { }
 
                     // User enters distance data in km
                     while (true) {
-                        Console.WriteLine("Enter distance in km (min: 0.5 km, max: 30 km):");
+                        Console.WriteLine("Enter distance in km (min: 0.0005 km, max: 30.00 km):");
 
                         float.TryParse(CustomReadLine(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out km);
 
-                        if (km < 0.5f || km > 30f) {
-                            string errorTextDistance = km < 30 ? $"The Distance can't be smaller than 0.5 km, you entered {km}" 
-                                : $"The Distance can't be bigger than 30 km, you entered {km}";
+                        if (km < 0.0005f || km > 30f) {
+                            string errorTextDistance = km < 30 ? $"The Distance can't be smaller than 0.0005 km, you entered {km.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}" 
+                                : $"The Distance can't be bigger than 30.00 km, you entered {km.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}";
                             WriteMarkup($"%RED%Error%RED%: {errorTextDistance}");
                             continue;
                         }
@@ -273,13 +300,17 @@ class CommandEnteredException : Exception { }
 
                     // Output
                     float velAngle = Calc_angle(km, charges);
-                    string hozAngleConvert = hozAngle > 0 ? hozAngle.ToString() : "null";
-                    SaveNewAngle(velAngle, hozAngleConvert, charges, gunSelected);
+                    float timeTravel = Calc_TimeTravel(km, charges);
+
+                    string hozAngleConvert = hozAngle > 0 ? hozAngle.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "null";
+                    SaveNewAngle(velAngle, hozAngleConvert, charges, gunSelected, timeTravel);
+
                     Console.WriteLine(string.Concat(Enumerable.Repeat("-", 40)));
                     Console.WriteLine($"  {gunSelected} gun,\n" +
                         $"  vertical angle {velAngle.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)},\n" +
                         $"  horizontal angle {hozAngleConvert},\n" +
-                        $"  charges {charges}\n");
+                        $"  charges {charges},\n" +
+                        $"  time to travel {timeTravel.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} secondes");
                     if (alwaysShowList) {
                         Console.WriteLine(ReturnSavedListPlaneText());
                     }

@@ -71,7 +71,7 @@ class CommandEnteredException : Exception { }
                 text += $"{i}.{savedAngle.gunSelected} gun,\n" +
                         $"  vertical angle {savedAngle.velAngle.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)},\n" +
                         $"  horizontal angle {savedAngle.hozAngle},\n" +
-                        $"  charges {savedAngle.charges}\n" +
+                        $"  charges {savedAngle.charges},\n" +
                         $"  time to travel {savedAngle.timeToTrivel.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} secondes\n";
                 if (i + 1 < savedAnglesList.Count) {
                     text += " .\n";
@@ -130,7 +130,7 @@ class CommandEnteredException : Exception { }
                         "\n  /list - shows list of saved agnles" +
                         "\n  /savelist <true/false> - enables/disables saving angles, but keeps old angles" +
                         "\n  /alwaysshowlist <true/false> - if set to true shows saved list every time" +
-                        "\n  /setmaxlist <index> - makes so it removes old saved angles from it when it get's bigger that max size list" +
+                        "\n  /setmaxlist <number> - makes so it removes old saved angles from it when it get's bigger that max size list" +
                         "\n------------------------");
                     break;
                 case "/remove":

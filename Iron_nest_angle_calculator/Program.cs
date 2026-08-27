@@ -2,6 +2,7 @@
 using CalculateAngleViaDistanceIronNest.Runtime;
 using CalculateAngleViaDistanceIronNest.Data;
 using CalculateAngleViaDistanceIronNest.JsonSaveLoad;
+using CalculateAngleViaDistanceIronNest.Utilitys;
 using Spectre.Console;
 using System;
 using System.Diagnostics;
@@ -21,7 +22,6 @@ namespace CalculateAngleViaDistanceIronNest {
 
     class Program {
         static void Main(string[] args) {
-
             if (args.Length > 0 && args[0] == "--build-release") {
                 BuildReleaseApp.Run();
                 return;
@@ -31,11 +31,12 @@ namespace CalculateAngleViaDistanceIronNest {
                 JsonManger.CheckFolderFile();
                 getJson = JsonManger.GetLoadManger();
             }
-            if (!args.Contains("--relaunched") && OperatingSystem.IsWindows()
-                && IsWindowsTerminalAvailable() && !IsAlreadyInWindowsTerminal() && IsLegacyConsoleMode(getJson)) {
-                RelaunchInWindowsTerminal(args);
-                return;
+
+            if (!args.Contains("--relaunched") && !Utility.IsAlreadyInGoodTerminal() && IsLegacyConsoleMode(getJson)) {
+                if (Utility.TryRelaunchInBetterTerminal(args)) return;
+                // no better terminal found fall through and run in whatever we have
             }
+
             var state = new AppState();
             var runtime = new AppRuntime(state);
             var commandRegistry = new CommandRegistry(state, runtime);
@@ -48,55 +49,19 @@ namespace CalculateAngleViaDistanceIronNest {
             }
             else {
                 while (true) {
-                    AnsiConsole.MarkupLine("[yellow]Do you want to use the modern console mode? (y/n)[/]");
-                    string input = Console.ReadLine()?.Trim().ToLower();
-                    if (input == "y" || input == "yes") {
+                    if (AnsiConsole.Confirm("[yellow]Do you want to use the modern console mode?[/]")) {
                         jsonSave.useLegacyConsole = true;
                         JsonManger.SaveJson(jsonSave);
                         return true;
                     }
-                    else if (input == "n" || input == "no") {
+                    else {
                         jsonSave.useLegacyConsole = false;
                         JsonManger.SaveJson(jsonSave);
                         return false;
                     }
-                    else {
-                        AnsiConsole.MarkupLine("[red]Invalid input. Please enter 'y' or 'n'.[/]");
-                    }
                 }
             }
         }
-        static bool IsWindowsTerminalAvailable() {
-            try {
-                var psi = new ProcessStartInfo {
-                    FileName = "where",
-                    Arguments = "wt.exe",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                using var proc = Process.Start(psi);
-                proc.WaitForExit();
-                return proc.ExitCode == 0;
-            }
-            catch {
-                return false;
-            }
-        }
-
-        static bool IsAlreadyInWindowsTerminal() {
-            // Windows Terminal sets this env var for processes running inside it
-            return Environment.GetEnvironmentVariable("WT_SESSION") != null;
-        }
-
-        static void RelaunchInWindowsTerminal(string[] args) {
-            string exePath = Process.GetCurrentProcess().MainModule.FileName;
-            var psi = new ProcessStartInfo {
-                FileName = "wt.exe",
-                Arguments = $"\"{exePath}\" --relaunched",
-                UseShellExecute = true
-            };
-            Process.Start(psi);
-        }
     }
 }
+

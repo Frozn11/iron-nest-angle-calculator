@@ -4,6 +4,8 @@ using CalculateAngleViaDistanceIronNest.Data;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 namespace CalculateAngleViaDistanceIronNest.Runtime {
     class AppRuntime {
         private readonly AppState _state;
@@ -13,7 +15,7 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
             => _commandMap = commandMap;
 
         public void Run() {
-            Console.WriteLine("Use /help for list of commands");
+            AnsiConsole.MarkupLine("Use /help for list of commands");
             while (true) {
                 try {
                     var result = CustomReadLine();
@@ -21,19 +23,19 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
                 }
                 catch (Exception ex) {
                     AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]");
-#if DEBUG
+                #if DEBUG
                     AnsiConsole.WriteException(ex);
-#endif
+                #endif
                 }
             }
         }
 
         public InputResult CustomReadLine() {
-            Console.Write("> ");
+            AnsiConsole.Markup("> ");
             string input = Console.ReadLine();
-            if (input != null && input.ToLower().StartsWith("q"))
+            if (input != null && input.ToLower().StartsWith('q'))
                 return new InputResult(input, InputStatus.Quit);
-            if (input != null && input.StartsWith("/")) {
+            if (input != null && input.StartsWith('/')) {
                 HandleCommand(input);
                 return new InputResult(input, InputStatus.Command);
             }

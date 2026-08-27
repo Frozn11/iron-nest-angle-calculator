@@ -33,7 +33,8 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 (new[] { "/savelist" }, new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
                 (new[] { "/alwaysshowlist", "/alwsl" }, new(HandleAlwaysShowList, "/alwaysshowlist <true/false>", "if set to true shows saved list every time")),
                 (new[] { "/setmaxlist" }, new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
-                (new[] { "/calcmode" }, new(HandleCalacMode, "/calcmode", "starts calculation mode")),
+                (new[] { "/calculatemode", "/calcmode", "/cm" }, new(HandleCalacMode, "/calcmode", "starts calculation mode")),
+                (new[] { "/calculate", "/calc", "/c" }, new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),  
             };
             return _commandsHolder
                 .SelectMany(c => c.Aliases.Select(alias => (alias, c.Info)))
@@ -116,13 +117,26 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 if (gunResult.Aborted) return;
 
                 float hozAngle = ReadHozAngle();
-
                 float km = ReadDistance();
-
                 int charges = ReadCharges(km);
 
                 _runtime.Output(km, charges, hozAngle, gunResult.Value);
             }
+        }
+
+        void HandleCalculate(string[] parts) {
+            if (parts.Length < 4 ||
+                    !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float km) ||
+                    !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges) || 
+                    !Enum.TryParse(parts[3], true, out Gun gun)) {
+                AnsiConsole.MarkupLine("[red]Invalid or missing arguments. Usage: /calculate <gun> <km> <charges>[/]");
+                return;
+            }
+            if (!Utility.CheckDistanceLimit(km)) {
+                AnsiConsole.MarkupLine($"[red]{Utility.GetDistanceLimitText(km)} {Utility.F(km)}[/]");
+                return;
+            }
+            _runtime.Output(km: km, charges: charges, hozAngle: -1f, gunSelected: gun);
         }
 
         ReadResult<Gun> ReadGun() {
@@ -146,9 +160,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                     .ShowDefaultValue(false)
                     .Validate(angle => angle switch {
                         <= -1 => ValidationResult.Success(), // skip sentinel
-                        > 360 => ValidationResult.Error("[red]Angle can't be bigger than 360.00[/]"),
-                        <= 0 => ValidationResult.Error(
-                            $"[red]Angle can't be smaller than 0.00, you entered {angle.ToString("F2", CultureInfo.InvariantCulture)}[/]"),
+                        _ when !Utility.CheckHozAngleLimit(angle) => ValidationResult.Error($"[red]{Utility.GetHozAngleLimitText(angle)} {Utility.F(angle)}[/]"),
                         _ => ValidationResult.Success()
                     })
             );
@@ -159,10 +171,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 new TextPrompt<float>("Enter distance in km (min: 0.0005 km, max: 30.00 km):")
                     .Culture(CultureInfo.InvariantCulture)
                     .Validate(km => km switch {
-                        < 0.0005f => ValidationResult.Error(
-                            $"[red]Distance can't be smaller than 0.0005 km, you entered {km.ToString("F2", CultureInfo.InvariantCulture)}[/]"),
-                        > 30f => ValidationResult.Error(
-                            $"[red]Distance can't be bigger than 30.00 km, you entered {km.ToString("F2", CultureInfo.InvariantCulture)}[/]"),
+                        _ when !Utility.CheckDistanceLimit(km) => ValidationResult.Error($"[red]{Utility.GetDistanceLimitText(km)} {Utility.F(km)}[/]"),
                         _ => ValidationResult.Success()
                     })
             );
@@ -176,8 +185,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 new TextPrompt<int>($"Enter amount of charges (min: {minCharges}, max: 6):")
                     .Validate(c => c switch {
                         _ when c < minCharges => ValidationResult.Error($"[red]Too small, min charges are {minCharges}[/]"),
-                        > 6 => ValidationResult.Error("[red]You entered a number bigger than 6[/]"),
-                        < 1 => ValidationResult.Error("[red]You entered a number smaller than 1[/]"),
+                        _ when !Utility.CheckChargeLimit(c) => ValidationResult.Error($"[red]{Utility.GetChargeLimitText(c)}[/]"),
                         _ => ValidationResult.Success()
                     })
             );

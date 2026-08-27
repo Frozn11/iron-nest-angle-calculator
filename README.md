@@ -48,23 +48,26 @@ The tool automatically calculates the minimum number of charges required for the
 ## Usage
 
 1. Run the program.
-2. Select which gun you're aiming (`Left` / `L`, `Right` / `R`, or skip).
-3. Optionally set a horizontal angle from 0.00 to 360.00 (or skip).
-4. Enter the target distance in km (min 0.0005 km, max 30 km).
-5. Enter the number of charges to use (must be between the calculated minimum and 6).
-6. The tool prints the vertical angle, horizontal angle, charges used, and flight time, and saves the shot to the list.
+2. Type `/calcmode` to start the calculation flow.
+3. Select which gun you're aiming (`Left` / `L`, `Right` / `R`, or skip).
+4. Optionally set a horizontal angle from 0.00 to 360.00 (or skip).
+5. Enter the target distance in km (min 0.0005 km, max 30 km).
+6. Enter the number of charges to use (must be between the calculated minimum and 6).
+7. The tool prints the vertical angle, horizontal angle, charges used, and flight time, and saves the shot to the list. It then loops back to step 3 for the next shot.
+8. Type `q` (or anything starting with `q`) at any prompt to quit.
 
 **Example:**
 
 ```
 Use /help for list of commands
-Selcet Gun: Left(L) or Right(R) (can be skiped if not needed)
+> /calcmode
+Select Gun: Left(L) or Right(R) (can be skipped if not needed)
 > L
-Set horizontal angle from 0.00 to 360.00 (can be skiped if not needed)
+Set horizontal angle from 0.00 to 360.00 (can be skipped if not needed):
 > 90
 Enter distance in km (min: 0.0005 km, max: 30.00 km):
 > 12
-Enter amout of charges (min: 3, max: 6)
+Enter amount of charges (min: 3, max: 6):
 > 3
 ----------------------------------------
   Left gun,
@@ -84,26 +87,38 @@ Enter amout of charges (min: 3, max: 6)
 
 ## Commands
 
-Type any of these at an input prompt (starting with `/`) instead of a value:
+Type any of these at an input prompt (starting with `/`) instead of a value. Aliases are shown in parentheses.
 
 | Command | Description |
 |---------|-------------|
-| `/help` | Shows the list of available commands |
+| `/help` (`/h`) | Shows the list of available commands |
+| `/calcmode` | Starts the calculation flow (gun → horizontal angle → distance → charges) |
 | `/list` | Shows the list of saved shots |
-| `/remove <index>` | Removes a saved shot by index (prompts for one if omitted) |
+| `/remove <index>` (`/rem`) | Removes a saved shot by index (prompts for one if omitted) |
 | `/savelist <true/false>` | Enables/disables saving new shots to the list (existing entries are kept) |
-| `/alwaysshowlist <true/false>` | Toggles whether the saved list is printed after every shot |
+| `/alwaysshowlist <true/false>` (`/alwsl`) | Toggles whether the saved list is printed after every shot |
 | `/setmaxlist <number>` | Sets the maximum number of shots kept in the saved list; oldest entries are dropped once it's exceeded (default: 6) |
+
+You can also type `q` (or anything starting with `q`) at any prompt to quit the program.
 
 ## Requirements
 
 - .NET (any recent version supporting `System.Linq` and top-level console apps) - only needed if building from source or using a framework-dependent release build.
+- [Spectre.Console](https://spectreconsole.net/) - used for colored output and input prompts, restored automatically via NuGet when building from source.
 
 ## Build & Run
 
 ```bash
 dotnet build
 dotnet run
+```
+
+## Tests
+
+Unit tests for the calculation logic (angle, flight time, minimum charges) live in a separate xUnit test project:
+
+```bash
+dotnet test
 ```
 
 ## License

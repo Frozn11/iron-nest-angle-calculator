@@ -1,5 +1,7 @@
 ﻿using CalculateAngleViaDistanceIronNest.Calculate;
 using CalculateAngleViaDistanceIronNest.Data;
+using CalculateAngleViaDistanceIronNest.Runtime;
+using CalculateAngleViaDistanceIronNest.Utilitys;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
@@ -16,8 +18,12 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
     }
     class CommandRegistry {
         private readonly AppState _state;
+        private readonly AppRuntime _runtime;
+        public CommandRegistry(AppState state, AppRuntime runtime) {
+            _state = state;
+            _runtime = runtime;
+        }
         private (string[] Aliases, CommandInfo Info)[] _commandsHolder;
-        public CommandRegistry(AppState state) => _state = state;
         public record CommandInfo(Action<string[]> Handler, string Usage, string Description, bool Hidden = false);
         public Dictionary<string, CommandInfo> BuildCommandMap() {
             _commandsHolder = new (string[], CommandInfo)[] {
@@ -54,8 +60,8 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             if (string.IsNullOrEmpty(arg) || !int.TryParse(arg, out int index)) {
                 AnsiConsole.MarkupLine(_state.ReturnSavedListPlaneText());
                 AnsiConsole.MarkupLine("Enter an index to remove selected item");
-                var readResult = Program.CustomReadLine();
-                if (readResult.Status != InputStatus.Normal || !int.TryParse(readResult.Value, out index)) {
+                var input = _runtime.CustomReadLine();
+                if (input.Status != InputStatus.Normal || !int.TryParse(input.Value, out index)) {
                     AnsiConsole.MarkupLine("[red]Invalid index.[/]");
                     return;
                 }
@@ -74,7 +80,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
 
         void HandleSaveList(string[] parts) {
             string args = parts.Length > 1 ? parts[1].Trim() : null;
-            if (Program.TryParseBool(args, out bool saveListValue)) {
+            if (Utility.TryParseBool(args, out bool saveListValue)) {
                 _state.saveList = saveListValue;
             }
             else {
@@ -83,7 +89,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         }
         void HandleAlwaysShowList(string[] parts) {
             string args = parts.Length > 1 ? parts[1].Trim() : null;
-            if (Program.TryParseBool(args, out bool alwaysShowListValue)) {
+            if (Utility.TryParseBool(args, out bool alwaysShowListValue)) {
                 _state.alwaysShowList = alwaysShowListValue;
             }
             else {
@@ -115,13 +121,13 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
 
                 int charges = ReadCharges(km);
 
-                Program.Output(km, charges, hozAngle, gunResult.Value);
+                _runtime.Output(km, charges, hozAngle, gunResult.Value);
             }
         }
 
-        static ReadResult<Gun> ReadGun() {
+        ReadResult<Gun> ReadGun() {
             Console.WriteLine("Select Gun: Left(L) or Right(R) (can be skipped if not needed)");
-            var input = Program.CustomReadLine();
+            var input = _runtime.CustomReadLine();
             if (input.Status != InputStatus.Normal) return ReadResult<Gun>.Abort();
 
             Gun gun = input.Value?.ToLower() switch {

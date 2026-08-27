@@ -1,25 +1,19 @@
-﻿using CalculateAngleViaDistanceIronNest.Data;
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CalculateAngleViaDistanceIronNest.JsonSaveLoad {
-    public class JsonSaveLoad {
-        public bool useLegacyConsole { get; set; } = false;
-        public Gun selectedGun { get; set; }
+    public class JsonSave {
+        public bool? useLegacyConsole { get; set; } = null;
     }
     class JsonManger {
         static string appDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "IronNestCalcSave");
         static string saveNameFilePath = Path.Combine(appDataDir, "save.json");
-        static readonly JsonSerializerOptions options = new () {
+        static readonly JsonSerializerOptions options = new() {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
         };
-        static readonly JsonSaveLoad save = new JsonSaveLoad {
-            useLegacyConsole = false,
-            selectedGun = Gun.Left
-        };
+        static readonly JsonSave save = new();
 
         public static void CheckFolderFile() {
 
@@ -34,17 +28,22 @@ namespace CalculateAngleViaDistanceIronNest.JsonSaveLoad {
             }
         }
 
-        public void SaveManger(JsonSaveLoad save) {
+        public static void SaveJson(JsonSave save) {
             CheckFolderFile();
             var options = new JsonSerializerOptions { WriteIndented = true };
             byte[] jsonUtf8Bytes = JsonSerializer.SerializeToUtf8Bytes(save, options);
+            File.WriteAllBytes(saveNameFilePath, jsonUtf8Bytes);
         }
-        public void LoadManger() {
-            if (!Directory.Exists(appDataDir) || !File.Exists(saveNameFilePath)) return;
+        public static JsonSave GetLoadManger() {
+            if (!Directory.Exists(appDataDir) || !File.Exists(saveNameFilePath)) {
+                CheckFolderFile();
+                return null;
+            }
 
             byte[] jsonUtf8Bytes = File.ReadAllBytes(saveNameFilePath);
             var utf8Reader = new Utf8JsonReader(jsonUtf8Bytes);
-            JsonSaveLoad deserializedWeatherForecast = JsonSerializer.Deserialize<JsonSaveLoad>(ref utf8Reader)!;
+            JsonSave deserializedWeatherForecast = JsonSerializer.Deserialize<JsonSave>(ref utf8Reader)!;
+            return deserializedWeatherForecast;
         }
     }
 }

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.36631.11
+# Visual Studio Version 18
+VisualStudioVersion = 18.9.12120.119 stable
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Iron_nest_angle_calculator", "Iron_nest_angle_calculator.csproj", "{70A54E0B-0724-483E-8638-9B7AC841DD03}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IronNestAngleCalculator", "IronNestAngleCalculator.csproj", "{70A54E0B-0724-483E-8638-9B7AC841DD03}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

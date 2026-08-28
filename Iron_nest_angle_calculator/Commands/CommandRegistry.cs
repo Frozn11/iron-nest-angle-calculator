@@ -9,13 +9,6 @@ using System.Globalization;
 using System.Linq;
 
 namespace CalculateAngleViaDistanceIronNest.Commands {
-    public readonly struct ReadResult<T> {
-        public T Value { get; }
-        public bool Aborted { get; }
-        public static ReadResult<T> Ok(T value) => new(value, false);
-        public static ReadResult<T> Abort() => new(default, true);
-        private ReadResult(T value, bool aborted) { Value = value; Aborted = aborted; }
-    }
     class CommandRegistry {
         private readonly AppState _state;
         private readonly AppRuntime _runtime;
@@ -33,8 +26,8 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 (new[] { "/savelist" }, new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
                 (new[] { "/alwaysshowlist", "/alwsl" }, new(HandleAlwaysShowList, "/alwaysshowlist <true/false>", "if set to true shows saved list every time")),
                 (new[] { "/setmaxlist" }, new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
-                (new[] { "/calculatemode", "/calcmode", "/cm" }, new(HandleCalacMode, "/calcmode", "starts calculation mode")),
-                (new[] { "/calculate", "/calc", "/c" }, new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),  
+                (new[] { "/calculatemode", "/calcmode", "/cm" }, new(HandleCalcMode, "/calcmode", "starts calculation mode")),
+                (new[] { "/calculate", "/calc", "/c" }, new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),
             };
             return _commandsHolder
                 .SelectMany(c => c.Aliases.Select(alias => (alias, c.Info)))
@@ -61,8 +54,8 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             if (string.IsNullOrEmpty(arg) || !int.TryParse(arg, out int index)) {
                 AnsiConsole.MarkupLine(_state.ReturnSavedListPlaneText());
                 AnsiConsole.MarkupLine("Enter an index to remove selected item");
-                var input = _runtime.CustomReadLine();
-                if (input.Status != InputStatus.Normal || !int.TryParse(input.Value, out index)) {
+                string input = _runtime.CustomReadLine();
+                if (!int.TryParse(input, out index)) {
                     AnsiConsole.MarkupLine("[red]Invalid index.[/]");
                     return;
                 }
@@ -111,25 +104,29 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             }
         }
 
-        void HandleCalacMode(string[] parts) {
+        void HandleCalcMode(string[] parts) {
             while (true) {
-                var gunResult = ReadGun();
-                if (gunResult.Aborted) return;
-
+                Gun gunResult = ReadGun();
+                AnsiConsole.MarkupLine($"[green]Selected gun: {gunResult}[/]");
                 float hozAngle = ReadHozAngle();
                 float km = ReadDistance();
                 int charges = ReadCharges(km);
 
-                _runtime.Output(km, charges, hozAngle, gunResult.Value);
+                _runtime.Output(km, charges, hozAngle, gunResult);
             }
         }
 
         void HandleCalculate(string[] parts) {
-            if (parts.Length < 4 ||
+            if (parts.Length < 3 ||
                     !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float km) ||
-                    !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges) || 
-                    !Enum.TryParse(parts[3], true, out Gun gun)) {
-                AnsiConsole.MarkupLine("[red]Invalid or missing arguments. Usage: /calculate <gun> <km> <charges>[/]");
+                    !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges)) {
+                AnsiConsole.MarkupLine("[red]Invalid or missing arguments. Usage: /calculate <km> <charges> <gun>[/]");
+                return;
+            }
+
+            Gun gun = Gun.None;
+            if (parts.Length >= 4 && !Enum.TryParse(parts[3], true, out gun)) {
+                AnsiConsole.MarkupLine("[red]Invalid gun value.[/]");
                 return;
             }
             if (!Utility.CheckDistanceLimit(km)) {
@@ -139,17 +136,13 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             _runtime.Output(km: km, charges: charges, hozAngle: -1f, gunSelected: gun);
         }
 
-        ReadResult<Gun> ReadGun() {
-            Console.WriteLine("Select Gun: Left(L) or Right(R) (can be skipped if not needed)");
-            var input = _runtime.CustomReadLine();
-            if (input.Status != InputStatus.Normal) return ReadResult<Gun>.Abort();
-
-            Gun gun = input.Value?.ToLower() switch {
-                "right" or "r" => Gun.Right,
-                "left" or "l" => Gun.Left,
-                _ => Gun.None
-            };
-            return ReadResult<Gun>.Ok(gun);
+        Gun ReadGun() {
+            // Console.WriteLine("Select Gun: Left(L) or Right(R) (can be skipped if not needed)");
+            var promt = new SelectionPrompt<Gun>()
+                .Title("Select Gun: Left(L) or Right(R) (can be skipped if not needed):")
+                .UseConverter(gun => gun == Gun.None ? "Skip" : gun.ToString())
+                .AddChoices(Gun.None, Gun.Left, Gun.Right);
+            return AnsiConsole.Prompt(promt);
         }
 
         static float ReadHozAngle() {

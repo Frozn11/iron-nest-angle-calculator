@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.Security.Cryptography.X509Certificates;
+using System.Reflection;
 
 namespace CalculateAngleViaDistanceIronNest.Utilitys {
     public class Utility {
@@ -137,6 +137,17 @@ namespace CalculateAngleViaDistanceIronNest.Utilitys {
             catch {
                 return false;
             }
+        }
+
+        public static string[] GetVersion() {
+            string raw = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion ?? "unknown+unknown";
+            string[] parts = raw.Split('+');
+            string version = parts[0];
+            string hash = parts.Length > 1 ? parts[1] : "unknown";
+
+            return [version, hash];
         }
     }
 }

@@ -37,7 +37,6 @@ namespace CalculateAngleViaDistanceIronNest.JsonSaveLoad {
         public static JsonSave GetLoadManger() {
             if (!Directory.Exists(appDataDir) || !File.Exists(saveNameFilePath)) {
                 CheckFolderFile();
-                return null;
             }
 
             byte[] jsonUtf8Bytes = File.ReadAllBytes(saveNameFilePath);

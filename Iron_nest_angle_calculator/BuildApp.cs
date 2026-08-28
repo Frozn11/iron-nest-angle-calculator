@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 
 namespace CalculateAngleViaDistanceIronNest {
-    class BuildReleaseApp {
+    class BuildApp {
         // Executable name used in the .csproj (AssemblyName), used to name zips
         const string appName = "IronNestCalc";
         static Guid Downloads = new Guid("374DE290-123F-4565-9164-39C4925E467B");
@@ -22,7 +22,7 @@ namespace CalculateAngleViaDistanceIronNest {
             "osx-arm64"
         };
 
-        public static void Run() {
+        public static void RunRelease() {
             string projectDir = FindProjectDirectory();
             string downloadsPath = GetDownloadsPath();
 
@@ -42,17 +42,33 @@ namespace CalculateAngleViaDistanceIronNest {
             Console.WriteLine("\nAll builds complete. Zips are in: " + releasesDir);
         }
 
+        public static void RunDebug() {
+            string projectDir = FindProjectDirectory();
+            string downloadsPath = GetDownloadsPath();
+            if (projectDir == null) {
+                Console.WriteLine("Could not locate .csproj file. Aborting.");
+                return;
+            }
+            string releasesDir = Path.Combine(downloadsPath, "debug");
+            Directory.CreateDirectory(releasesDir);
+            // Build only for the current platform
+            Publish(projectDir, releasesDir, runtimeIds[0], selfContained: true, label: "Standalone");
+            Publish(projectDir, releasesDir, runtimeIds[0], selfContained: false, label: "Framework");
+        }
+
         static void Publish(string projectDir, string releasesDir, string rid, bool selfContained, string label) {
             string folderName = $"{appName}-{rid}-{label}";
             string outputDir = Path.Combine(releasesDir, $"{rid}-{label.ToLower()}");
             string zipPath = Path.Combine(releasesDir, $"{folderName}.zip");
+            string version = Utilitys.UpdateChecker.GetVersionFromGit();
 
-            Console.WriteLine($"\nBuilding {rid} ({label})...");
+            Console.WriteLine($"\nBuilding {rid} ({label}) — version {version}...");
 
             var psi = new ProcessStartInfo {
                 FileName = "dotnet",
                 Arguments = $"publish \"{projectDir}\" -c Release -r {rid} " +
                             $"--self-contained {(selfContained ? "true" : "false")} " +
+                            $"-p:Version={version} " +
                             $"-p:PublishSingleFile=true -o \"{outputDir}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,

@@ -1,4 +1,5 @@
 ﻿using CalculateAngleViaDistanceIronNest.Utilitys;
+using Spectre.Console;
 using System.Collections.Generic;
 
 namespace CalculateAngleViaDistanceIronNest.Data {
@@ -22,7 +23,7 @@ namespace CalculateAngleViaDistanceIronNest.Data {
             string text = "";
             for (int i = 0; i < savedAnglesList.Count; i++) {
                 SavedAngle savedAngle = savedAnglesList[i];
-                text += $"{i}. {ReturnSaveAngle(savedAngle)}";
+                text += $"{i}.{ReturnSaveAngle(savedAngle)}";
                 if (i + 1 < savedAnglesList.Count) {
                     text += " .\n";
                 }
@@ -31,12 +32,27 @@ namespace CalculateAngleViaDistanceIronNest.Data {
         }
 
         public string ReturnSaveAngle(SavedAngle savedAngle) {
-            string text = $"{savedAngle.gunSelected} gun,\n" +
-                        $"  vertical angle: {Utility.F(savedAngle.velAngle)},\n" +
-                        $"  horizontal angle: {Utility.F(savedAngle.hozAngle)},\n" +
-                        $"  charges: {savedAngle.charges},\n" +
-                        $"  time to travel: {Utility.F(savedAngle.timeToTrivel)} secondes\n";
+            string text = $"  {savedAngle.gunSelected} gun,\n" +
+                          $"  vertical angle: {Utility.F(savedAngle.velAngle)},\n" +
+                          $"  horizontal angle: {Utility.F(savedAngle.hozAngle)},\n" +
+                          $"  charges: {savedAngle.charges},\n" +
+                          $"  time to travel: {Utility.F(savedAngle.timeToTrivel)} secondes\n";
             return text;
+        }
+
+        public void ReturnSaveAngleTable(SavedAngle savedAngle) {
+            var table = new Table();
+            table.AsciiBorder();
+
+            table.AddColumns("vertical angle", "horizontal angle", "charges", "time to travel", "gun");
+            table.AddRow(
+                Utility.F(savedAngle.velAngle),
+                Utility.F(savedAngle.hozAngle),
+                savedAngle.charges.ToString(),
+                Utility.F(savedAngle.timeToTrivel),
+                savedAngle.gunSelected.ToString()
+            );
+            AnsiConsole.Write(table);
         }
 
         public string ReturnSavedListPlaneText() {
@@ -48,5 +64,7 @@ namespace CalculateAngleViaDistanceIronNest.Data {
                 $"\n{new string('-', 40)}";
             return text;
         }
+
+
     }
 }

@@ -1,67 +1,43 @@
 ﻿using CalculateAngleViaDistanceIronNest.Commands;
-using CalculateAngleViaDistanceIronNest.Runtime;
 using CalculateAngleViaDistanceIronNest.Data;
 using CalculateAngleViaDistanceIronNest.JsonSaveLoad;
+using CalculateAngleViaDistanceIronNest.Runtime;
 using CalculateAngleViaDistanceIronNest.Utilitys;
 using Spectre.Console;
 using System;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CalculateAngleViaDistanceIronNest {
-    public enum InputStatus { Normal, Quit, Command }
-
-    public readonly struct InputResult {
-        public string Value { get; }
-        public InputStatus Status { get; }
-        public InputResult(string value, InputStatus status) {
-            Value = value;
-            Status = status;
-        }
-    }
-
     class Program {
-        static void Main(string[] args) {
-            if (args.Length > 0 && args[0] == "--build-release") {
-                BuildReleaseApp.Run();
-                return;
-            }
-            JsonSave getJson = JsonManger.GetLoadManger();
-            if (getJson == null) {
-                JsonManger.CheckFolderFile();
-                getJson = JsonManger.GetLoadManger();
+        static async Task Main(string[] args) {
+            switch (args.FirstOrDefault()) {
+                case "--build-release": BuildApp.RunRelease(); return;
+                case "--build-debug": BuildApp.RunDebug(); return;
             }
 
-            if (!args.Contains("--relaunched") && !Utility.IsAlreadyInGoodTerminal() && IsLegacyConsoleMode(getJson)) {
+            JsonSave getJson = JsonManger.GetLoadManger();
+
+            bool alreadyRelaunched = args.Contains("--relaunched");
+            if (!alreadyRelaunched && !Utility.IsAlreadyInGoodTerminal() && IsLegacyConsoleMode(getJson)) {
                 if (Utility.TryRelaunchInBetterTerminal(args)) return;
-                // no better terminal found fall through and run in whatever we have
+                // no better terminal available fall through and run as-is
             }
 
             var state = new AppState();
             var runtime = new AppRuntime(state);
             var commandRegistry = new CommandRegistry(state, runtime);
             runtime.SetCommandMap(commandRegistry.BuildCommandMap());
-            runtime.Run();
+            await runtime.Run();
         }
         static bool IsLegacyConsoleMode(JsonSave jsonSave) {
             if (jsonSave.useLegacyConsole != null) {
                 return jsonSave.useLegacyConsole.Value;
             }
-            else {
-                while (true) {
-                    if (AnsiConsole.Confirm("[yellow]Do you want to use the modern console mode?[/]")) {
-                        jsonSave.useLegacyConsole = true;
-                        JsonManger.SaveJson(jsonSave);
-                        return true;
-                    }
-                    else {
-                        jsonSave.useLegacyConsole = false;
-                        JsonManger.SaveJson(jsonSave);
-                        return false;
-                    }
-                }
-            }
+            bool wantsModern = AnsiConsole.Confirm("[yellow]Do you want to use the modern console mode?[/]");
+            jsonSave.useLegacyConsole = wantsModern;
+            JsonManger.SaveJson(jsonSave);
+            return jsonSave.useLegacyConsole.Value;
         }
     }
 }
-

@@ -34,7 +34,7 @@ jobs:
 
       - name: Publish standalone (self-contained)
         run: |
-          dotnet publish Iron_nest_angle_calculator/Iron_nest_angle_calculator/IronNestAngleCalculator.csproj \
+          dotnet publish Iron_nest_angle_calculator/IronNestAngleCalculator.csproj \
             -c Release \
             -r ${{ matrix.rid }} \
             --self-contained true \
@@ -44,7 +44,7 @@ jobs:
 
       - name: Publish framework-dependent
         run: |
-          dotnet publish Iron_nest_angle_calculator/Iron_nest_angle_calculator/IronNestAngleCalculator.csproj \
+          dotnet publish Iron_nest_angle_calculator/IronNestAngleCalculator.csproj \
             -c Release \
             -r ${{ matrix.rid }} \
             --self-contained false \

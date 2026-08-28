@@ -53,15 +53,13 @@ jobs:
 
       - name: Zip standalone build
         run: |
-          cd publish/standalone-${{ matrix.rid }}
-          zip -r ../../IronNestCalc-${{ matrix.rid }}-standalone.zip .
-          cd -
+          mv publish/standalone-${{ matrix.rid }} IronNestCalc-${{ matrix.rid }}-Standalone
+          zip -r IronNestCalc-${{ matrix.rid }}-standalone.zip IronNestCalc-${{ matrix.rid }}-Standalone
 
       - name: Zip framework-dependent build
         run: |
-          cd publish/framework-dependent-${{ matrix.rid }}
-          zip -r ../../IronNestCalc-${{ matrix.rid }}-framework-dependent.zip .
-          cd -
+          mv publish/framework-dependent-${{ matrix.rid }} IronNestCalc-${{ matrix.rid }}-Framework
+          zip -r IronNestCalc-${{ matrix.rid }}-framework-dependent.zip IronNestCalc-${{ matrix.rid }}-Framework
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

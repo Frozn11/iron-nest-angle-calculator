@@ -108,23 +108,34 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         }
 
         void HandleCalculate(string[] parts) {
-            if (parts.Length < 3 ||
-                    !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float km) ||
-                    !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges)) {
-                AnsiConsole.MarkupLine("[red]Invalid or missing arguments. Usage: /calculate <km> <charges> <gun>[/]");
-                return;
-            }
-
             Gun gun = Gun.None;
-            if (parts.Length >= 4 && !Enum.TryParse(parts[3], true, out gun)) {
-                AnsiConsole.MarkupLine("[red]Invalid gun value.[/]");
+
+            bool isPartsSmallerThan3 = parts.Length < 3;
+
+            string errorMessage;
+            if (isPartsSmallerThan3) {
+                errorMessage = "[red]Missing arguments. Usage: /calculate <km> <charges> <gun>[/]";
+            }
+            else {
+                bool isKmInvalid = !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float km);
+                bool isChargesInval = !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges);
+                bool isGunInvalid = parts.Length >= 4 && !Enum.TryParse(parts[3], true, out gun);
+
+                errorMessage = isKmInvalid ? "[red]Invalid distance value (min: 0.0005 km, max: 30.00 km).[/]"
+                   : isChargesInval ? "[red]Invalid charges value (min: 1, max: 6).[/]"
+                   : isGunInvalid ? "[red]Invalid gun value.[/]"
+                   : !Utility.CheckDistanceLimit(km) ? $"[red]{Utility.GetDistanceLimitText(km)}[/]"
+                   : !Utility.CheckChargeLimit(charges) ? $"[red]{Utility.GetChargeLimitText(charges)}[/]"
+                   : null;
+
+                if (errorMessage != null) {
+                    AnsiConsole.MarkupLine(errorMessage);
+                    return;
+                }
+                _runtime.Output(km: km, charges: charges, hozAngle: -1f, gunSelected: gun);
                 return;
             }
-            if (!Utility.CheckDistanceLimit(km)) {
-                AnsiConsole.MarkupLine($"[red]{Utility.GetDistanceLimitText(km)} {Utility.F(km)}[/]");
-                return;
-            }
-            _runtime.Output(km: km, charges: charges, hozAngle: -1f, gunSelected: gun);
+            AnsiConsole.MarkupLine(errorMessage);
         }
 
         Gun ReadGun() {

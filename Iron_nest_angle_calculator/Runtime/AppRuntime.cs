@@ -15,7 +15,7 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
             => _commandMap = commandMap;
 
         public async Task Run() {
-#if !DEBUG
+#if RELEASE
             await Info();
 #endif
 

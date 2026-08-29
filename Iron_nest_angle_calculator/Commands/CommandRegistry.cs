@@ -24,7 +24,6 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 (new[] { "/remove", "/rem" }, new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
                 (new[] { "/list" }, new(HandleList, "/list", "shows list of saved angles")),
                 (new[] { "/savelist" }, new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
-                (new[] { "/alwaysshowlist", "/alwsl" }, new(HandleAlwaysShowList, "/alwaysshowlist <true/false>", "if set to true shows saved list every time")),
                 (new[] { "/setmaxlist" }, new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
                 (new[] { "/calculatemode", "/calcmode", "/cm" }, new(HandleCalcMode, "/calcmode", "starts calculation mode")),
                 (new[] { "/calculate", "/calc", "/c" }, new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),
@@ -52,7 +51,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             }
 
             if (string.IsNullOrEmpty(arg) || !int.TryParse(arg, out int index)) {
-                AnsiConsole.MarkupLine(_state.ReturnSavedListPlaneText());
+                _state.ReturnSavedListTable();
                 AnsiConsole.MarkupLine("Enter an index to remove selected item");
                 string input = _runtime.CustomReadLine();
                 if (!int.TryParse(input, out index)) {
@@ -70,7 +69,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             }
         }
 
-        void HandleList(string[] parts) => AnsiConsole.MarkupLine(_state.ReturnSavedListPlaneText());
+        void HandleList(string[] parts) => _state.ReturnSavedListTable();
 
         void HandleSaveList(string[] parts) {
             string args = parts.Length > 1 ? parts[1].Trim() : null;
@@ -81,15 +80,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 AnsiConsole.MarkupLine("[red]wrong value[/]");
             }
         }
-        void HandleAlwaysShowList(string[] parts) {
-            string args = parts.Length > 1 ? parts[1].Trim() : null;
-            if (Utility.TryParseBool(args, out bool alwaysShowListValue)) {
-                _state.alwaysShowList = alwaysShowListValue;
-            }
-            else {
-                AnsiConsole.MarkupLine("[red]wrong value[/]");
-            }
-        }
+
         void HandleSetMaxList(string[] parts) {
             string args = parts.Length > 1 ? parts[1].Trim() : null;
             if (int.TryParse(args, out int value) && value > 0) {

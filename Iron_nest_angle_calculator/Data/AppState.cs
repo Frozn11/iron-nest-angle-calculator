@@ -1,10 +1,23 @@
 ﻿using CalculateAngleViaDistanceIronNest.Utilitys;
 using Spectre.Console;
+using Spectre.Console.Rendering;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace CalculateAngleViaDistanceIronNest.Data {
+    public sealed class NoTopAsciiBorder : TableBorder {
+        public override string GetPart(TableBorderPart part) => part switch {
+            TableBorderPart.HeaderTopLeft => "",
+            TableBorderPart.HeaderTop => "",
+            TableBorderPart.HeaderTopSeparator => "",
+            TableBorderPart.HeaderTopRight => "",
+            _ => Ascii.GetPart(part)
+        };
+    }
     public class AppState {
-        public List<SavedAngle> savedAnglesList { get; } = new();
+        public List<SavedAngle> savedAnglesList { get; } = [];
         public int maxSaveList { get; set; } = 6;
         public bool saveList { get; set; } = true;
         public bool alwaysShowList { get; set; } = true;
@@ -18,53 +31,52 @@ namespace CalculateAngleViaDistanceIronNest.Data {
             return saved;
         }
 
-        // Console.WriteLine($"{gunSelected} gun, vertical angle set to {velAngle.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}, horizontal angle set to {hozAngle}, charges needed {charges}\n");
-        public string ReturnSaveAnglesList() {
-            string text = "";
+        public void ReturnSavedListTable() {
+            var table = new Table()
+                .Border(new NoTopAsciiBorder())
+                .AddColumn("Index", col => col.RightAligned())
+                .AddColumns("vertical angle", "horizontal angle", "charges", "time to travel", "gun");
+
+
             for (int i = 0; i < savedAnglesList.Count; i++) {
                 SavedAngle savedAngle = savedAnglesList[i];
-                text += $"{i}.{ReturnSaveAngle(savedAngle)}";
-                if (i + 1 < savedAnglesList.Count) {
-                    text += " .\n";
-                }
+                string lastSaveItem = i + 1 >= maxSaveList ?
+                    $"[RED]#{i.ToString()}[/]"
+                    : i == 0 ? $"[Green]*{i}[/]"
+                    : $"{i}";
+
+                table.AddRow(
+                    lastSaveItem,
+                    Utility.F(savedAngle.velAngle),
+                    Utility.F(savedAngle.hozAngle),
+                    savedAngle.charges.ToString(),
+                    Utility.F(savedAngle.timeToTrivel),
+                    savedAngle.gunSelected.ToString()
+                );
             }
-            return text;
-        }
+            var writer = new StringWriter();
+            var measureConsole = AnsiConsole.Create(new AnsiConsoleSettings {
+                Out = new AnsiConsoleOutput(writer),
+                Ansi = AnsiSupport.No,
+                ColorSystem = ColorSystemSupport.NoColors
+            });
+            measureConsole.Write(table);
 
-        public string ReturnSaveAngle(SavedAngle savedAngle) {
-            string text = $"  {savedAngle.gunSelected} gun,\n" +
-                          $"  vertical angle: {Utility.F(savedAngle.velAngle)},\n" +
-                          $"  horizontal angle: {Utility.F(savedAngle.hozAngle)},\n" +
-                          $"  charges: {savedAngle.charges},\n" +
-                          $"  time to travel: {Utility.F(savedAngle.timeToTrivel)} secondes\n";
-            return text;
-        }
+            var lines = writer.ToString()
+                .Split('\n')
+                .Select(l => l.TrimEnd('\r'))
+                .Where(l => l.Length > 0)
+                .ToList();
+            int width = lines.Max(l => l.Length);
 
-        public void ReturnSaveAngleTable(SavedAngle savedAngle) {
-            var table = new Table();
-            table.AsciiBorder();
+            string title = "Saved Angles List";
+            string prefix = "+-" + title;
+            int dashCount = Math.Max(0, width - prefix.Length - 1);
+            string topLine = prefix + new string('-', dashCount) + "+";
 
-            table.AddColumns("vertical angle", "horizontal angle", "charges", "time to travel", "gun");
-            table.AddRow(
-                Utility.F(savedAngle.velAngle),
-                Utility.F(savedAngle.hozAngle),
-                savedAngle.charges.ToString(),
-                Utility.F(savedAngle.timeToTrivel),
-                savedAngle.gunSelected.ToString()
-            );
+            AnsiConsole.WriteLine(topLine);
             AnsiConsole.Write(table);
         }
-
-        public string ReturnSavedListPlaneText() {
-            if (savedAnglesList.Count == 0) {
-                return "The list is empty";
-            }
-            string text = $"--------Saved-List--------" +
-                $"\n{ReturnSaveAnglesList()}" +
-                $"\n{new string('-', 40)}";
-            return text;
-        }
-
 
     }
 }

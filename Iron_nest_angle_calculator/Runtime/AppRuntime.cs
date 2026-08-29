@@ -15,7 +15,10 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
             => _commandMap = commandMap;
 
         public async Task Run() {
+#if !DEBUG
             await Info();
+#endif
+
             AnsiConsole.MarkupLine("Use /help for list of commands");
             while (true) {
                 try {
@@ -52,14 +55,11 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
 
             var saved = _state.SaveNewAngle(velAngle, hozAngleConvert, charges, gunSelected, timeTravel);
 
-            AnsiConsole.MarkupLine(new string('-', 40));
-            //AnsiConsole.MarkupLine(_state.ReturnSaveAngle(saved));
-            _state.ReturnSaveAngleTable(saved);
 
-            //if (_state.alwaysShowList) AnsiConsole.MarkupLine(_state.ReturnSavedListPlaneText());
+            if (_state.alwaysShowList) _state.ReturnSavedListTable();
         }
 
-        async Task Info() {
+        private static async Task Info() {
             var table = new Table()
                 .HideHeaders()
                 .Border(TableBorder.None);

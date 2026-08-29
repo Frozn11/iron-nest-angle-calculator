@@ -20,7 +20,7 @@ namespace CalculateAngleViaDistanceIronNest {
 
             bool alreadyRelaunched = args.Contains("--relaunched");
             if (!alreadyRelaunched && !Utility.IsAlreadyInGoodTerminal() && IsLegacyConsoleMode(getJson)) {
-                if (Utility.TryRelaunchInBetterTerminal(args)) return;
+                if (Utility.TryRelaunchInBetterTerminal()) return;
                 // no better terminal available fall through and run as-is
             }
 

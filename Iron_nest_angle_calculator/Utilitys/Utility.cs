@@ -73,8 +73,8 @@ namespace CalculateAngleViaDistanceIronNest.Utilitys {
 
             return true; // unknown platform, don't try to be clever
         }
-        public static bool TryRelaunchInBetterTerminal(string[] args) {
-            string exePath = Process.GetCurrentProcess().MainModule.FileName;
+        public static bool TryRelaunchInBetterTerminal() {
+            string exePath = Environment.ProcessPath;
             string exeArgs = $"\"{exePath}\" --relaunched";
 
             if (OperatingSystem.IsWindows())
@@ -90,7 +90,7 @@ namespace CalculateAngleViaDistanceIronNest.Utilitys {
 
             if (OperatingSystem.IsLinux()) {
                 // No single "the terminal" on Linux — probe common ones in order.
-                (string cmd, string argsFormat)[] candidates = {
+                (string cmd, string argsFormat)[] candidates = [
                     ("x-terminal-emulator", "-e {0}"),
                     ("gnome-terminal",      "-- {0}"),
                     ("konsole",             "-e {0}"),
@@ -98,7 +98,7 @@ namespace CalculateAngleViaDistanceIronNest.Utilitys {
                     ("alacritty",           "-e {0}"),
                     ("kitty",               "{0}"),
                     ("xterm",               "-e {0}"),
-                };
+                ];
                 foreach (var (cmd, fmt) in candidates) {
                     if (IsCommandAvailable(cmd) && TryLaunch(cmd, string.Format(fmt, exeArgs)))
                         return true;

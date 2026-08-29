@@ -41,7 +41,7 @@ namespace CalculateAngleViaDistanceIronNest.Data {
             for (int i = 0; i < savedAnglesList.Count; i++) {
                 SavedAngle savedAngle = savedAnglesList[i];
                 string lastSaveItem = i + 1 >= maxSaveList ?
-                    $"[RED]#{i.ToString()}[/]"
+                    $"[RED]#{i}[/]"
                     : i == 0 ? $"[Green]*{i}[/]"
                     : $"{i}";
 

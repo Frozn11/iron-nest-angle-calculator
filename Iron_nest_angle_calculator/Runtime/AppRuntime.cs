@@ -7,10 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 namespace CalculateAngleViaDistanceIronNest.Runtime {
-    class AppRuntime {
-        private readonly AppState _state;
+    class AppRuntime(AppState state) {
+        private readonly AppState _state = state;
         private Dictionary<string, CommandRegistry.CommandInfo> _commandMap;
-        public AppRuntime(AppState state) => _state = state;
         public void SetCommandMap(Dictionary<string, CommandRegistry.CommandInfo> commandMap)
             => _commandMap = commandMap;
 
@@ -53,7 +52,7 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
             float timeTravel = Calculator.CalcTimeTravel(km, charges);
             float? hozAngleConvert = (hozAngle > 0) ? hozAngle : null;
 
-            var saved = _state.SaveNewAngle(velAngle, hozAngleConvert, charges, gunSelected, timeTravel);
+            _state.SaveNewAngle(velAngle, hozAngleConvert, charges, gunSelected, timeTravel);
 
 
             if (_state.alwaysShowList) _state.ReturnSavedListTable();

@@ -9,25 +9,21 @@ using System.Globalization;
 using System.Linq;
 
 namespace CalculateAngleViaDistanceIronNest.Commands {
-    class CommandRegistry {
-        private readonly AppState _state;
-        private readonly AppRuntime _runtime;
-        public CommandRegistry(AppState state, AppRuntime runtime) {
-            _state = state;
-            _runtime = runtime;
-        }
+    class CommandRegistry(AppState state, AppRuntime runtime) {
+        private readonly AppState _state = state;
+        private readonly AppRuntime _runtime = runtime;
         private (string[] Aliases, CommandInfo Info)[] _commandsHolder;
         public record CommandInfo(Action<string[]> Handler, string Usage, string Description, bool Hidden = false);
         public Dictionary<string, CommandInfo> BuildCommandMap() {
-            _commandsHolder = new (string[], CommandInfo)[] {
-                (new[] { "/help", "/h" }, new(HandleHelp, "/help", "shows this list of commands")),
-                (new[] { "/remove", "/rem" }, new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
-                (new[] { "/list" }, new(HandleList, "/list", "shows list of saved angles")),
-                (new[] { "/savelist" }, new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
-                (new[] { "/setmaxlist" }, new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
-                (new[] { "/calculatemode", "/calcmode", "/cm" }, new(HandleCalcMode, "/calcmode", "starts calculation mode")),
-                (new[] { "/calculate", "/calc", "/c" }, new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),
-            };
+            _commandsHolder = [
+                (["/help", "/h"], new(HandleHelp, "/help", "shows this list of commands")),
+                (["/remove", "/rem"], new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
+                (["/list"], new(HandleList, "/list", "shows list of saved angles")),
+                (["/savelist"], new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
+                (["/setmaxlist"], new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
+                (["/calculatemode", "/calcmode", "/cm"], new(HandleCalcMode, "/calcmode", "starts calculation mode")),
+                (["/calculate", "/calc", "/c"], new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),
+            ];
             return _commandsHolder
                 .SelectMany(c => c.Aliases.Select(alias => (alias, c.Info)))
                 .ToDictionary(x => x.alias, x => x.Info);
@@ -61,7 +57,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             }
 
             if (index >= 0 && index < _state.savedAnglesList.Count) {
-                _state.savedAnglesList.RemoveAt(index); // was Remove(list[index]) — RemoveAt avoids the extra lookup
+                _state.savedAnglesList.RemoveAt(index);
                 AnsiConsole.MarkupLine("[green]Item removed.[/]");
             }
             else {

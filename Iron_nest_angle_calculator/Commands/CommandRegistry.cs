@@ -17,10 +17,10 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         public Dictionary<string, CommandInfo> BuildCommandMap() {
             _commandsHolder = [
                 (["/help", "/h"], new(HandleHelp, "/help", "shows this list of commands")),
-                (["/remove", "/rem" ,"/r"], new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
-                (["/list", "/lis", "/l"], new(HandleList, "/list", "shows list of saved angles")),
-                (["/savelist", "/svl", "/sl"], new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
-                (["/setmaxlist", "/sml"], new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
+                (["/remove", "/rem"], new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
+                (["/list"], new(HandleList, "/list", "shows list of saved angles")),
+                (["/savelist"], new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
+                (["/setmaxlist"], new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
                 (["/calculatemode", "/calcmode", "/cm"], new(HandleCalcMode, "/calcmode", "starts calculation mode")),
                 (["/calculate", "/calc", "/c"], new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),
             ];

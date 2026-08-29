@@ -105,32 +105,29 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
 
         void HandleCalculate(string[] parts) {
             Gun gun = Gun.None;
-
-            bool isPartsSmallerThan3 = parts.Length < 3;
-
             string errorMessage;
-            if (isPartsSmallerThan3) {
+
+            if (parts.Length < 3) {
                 errorMessage = "[red]Missing arguments. Usage: /calculate <km> <charges> <gun>[/]";
             }
             else {
                 bool isKmInvalid = !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float km);
-                bool isChargesInval = !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges);
+                bool isChargesInvalid = !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges);
                 bool isGunInvalid = parts.Length >= 4 && !Enum.TryParse(parts[3], true, out gun);
 
                 errorMessage = isKmInvalid ? "[red]Invalid distance value (min: 0.0005 km, max: 30.00 km).[/]"
-                   : isChargesInval ? "[red]Invalid charges value (min: 1, max: 6).[/]"
+                   : isChargesInvalid ? "[red]Invalid charges value (min: 1, max: 6).[/]"
                    : isGunInvalid ? "[red]Invalid gun value.[/]"
                    : !Utility.CheckDistanceLimit(km) ? $"[red]{Utility.GetDistanceLimitText(km)}[/]"
                    : !Utility.CheckChargeLimit(charges) ? $"[red]{Utility.GetChargeLimitText(charges)}[/]"
                    : null;
 
-                if (errorMessage != null) {
-                    AnsiConsole.MarkupLine(errorMessage);
+                if (errorMessage == null) {
+                    _runtime.Output(km: km, charges: charges, hozAngle: -1f, gunSelected: gun);
                     return;
                 }
-                _runtime.Output(km: km, charges: charges, hozAngle: -1f, gunSelected: gun);
-                return;
             }
+
             AnsiConsole.MarkupLine(errorMessage);
         }
 

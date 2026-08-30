@@ -21,9 +21,10 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 (["/remove", "/rem"], new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
                 (["/list"], new(HandleList, "/list", "shows list of saved angles")),
                 (["/savelist"], new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
-                (["/setmaxlist"], new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
+                (["/setmaxlist", "/setmaxl", "/setml", "/smaxl","/smlist", "/sml"], new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
+                (["/maxlist", "/maxl", "/mlist", "/ml"], new(HandleMaxList, "/maxlist", "returns max list")),
                 (["/calculatemode", "/calcmode", "/cm"], new(HandleCalcMode, "/calcmode", "starts calculation mode")),
-                (["/calculate", "/calc", "/c"], new(HandleCalculate, "/calc <km> <charges> <gun>", "fast calculation")),
+                (["/calculate", "/calc", "/c"], new(HandleCalculate, "Usage: /calc <km> <charges> [[gun: L/R]] [[hozAngle]]", "fast calculation")),
             ];
             return _commandsHolder
                 .SelectMany(c => c.Aliases.Select(alias => (alias, c.Info)))
@@ -35,6 +36,7 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         // Command Handlers
         void HandleHelp(string[] parts) {
             AnsiConsole.MarkupLine("--------Commands--------");
+            AnsiConsole.MarkupLine(" [yellow]Legend:\n  [[value]] = optional argument\n  <value> = required argument[/]\n");
             foreach (var (_, info) in _commandsHolder) {
                 if (info.Hidden) continue;
                 AnsiConsole.MarkupLine($" {info.Usage} - {info.Description}");
@@ -94,6 +96,8 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             }
         }
 
+        void HandleMaxList(string[] parts) => AnsiConsole.MarkupLine($"max list: {_state.maxSaveList}");
+
         void HandleCalcMode(string[] parts) {
             try {
                 while (true) {
@@ -116,31 +120,56 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         }
 
         void HandleCalculate(string[] parts) {
-            Gun gun = Gun.None;
-            string errorMessage;
-
             if (parts.Length < 3) {
-                errorMessage = "[red]Missing arguments. Usage: /calculate <km> <charges> <gun>[/]";
+                AnsiConsole.MarkupLine("[red]Missing arguments. Usage: /calculate <km> <charges> <gun>[/]");
+                return;
             }
-            else {
-                bool isKmInvalid = !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float km);
-                bool isChargesInvalid = !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges);
-                bool isGunInvalid = parts.Length >= 4 && !Enum.TryParse(parts[3], true, out gun);
 
-                errorMessage = isKmInvalid ? "[red]Invalid distance value (min: 0.0005 km, max: 30.00 km).[/]"
-                   : isChargesInvalid ? "[red]Invalid charges value (min: 1, max: 6).[/]"
-                   : isGunInvalid ? "[red]Invalid gun value.[/]"
-                   : !Utility.CheckDistanceLimit(km) ? $"[red]{Utility.GetDistanceLimitText(km)}[/]"
-                   : !Utility.CheckChargeLimit(charges) ? $"[red]{Utility.GetChargeLimitText(charges)}[/]"
-                   : null;
+            Gun gun = Gun.None;
+            float hozAngle = -1;
+            bool isHozAngleInvalid = false;
+            bool isGunInvalid = false;
 
-                if (errorMessage == null) {
-                    _runtime.Output(km: km, charges: charges, hozAngle: -1f, gunSelected: gun);
-                    return;
+            if (parts.Length >= 4) {
+                Gun inputgun = parts[3].Trim().ToUpperInvariant() switch {
+                    "L" or "LEFT" => Gun.Left,
+                    "R" or "RIGHT" => Gun.Right,
+                    _ => Gun.None
+                };
+                if (inputgun != Gun.None) {
+                    gun = inputgun;
+                    if (parts.Length >= 5) {
+                        isHozAngleInvalid = !float.TryParse(parts[4], NumberStyles.Float, CultureInfo.InvariantCulture, out hozAngle);
+                    }
+                }
+                else {
+                    gun = Gun.None;
+                    isHozAngleInvalid = !float.TryParse(parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out hozAngle);
+                    if (isHozAngleInvalid) {
+                        isGunInvalid = true;
+                    }
                 }
             }
+            bool isKmInvalid = !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float km);
+            bool isChargesInvalid = !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges);
+            bool angleWasProvided = hozAngle != -1;
+            int minCharges = Calculator.GetMinCharges(km);
 
-            AnsiConsole.MarkupLine(errorMessage);
+            string errorMessage = isKmInvalid ? "Invalid distance value (min: 0.0005 km, max: 30.00 km)."
+                : isChargesInvalid ? "Invalid charges value (min: 1, max: 6)."
+                : isGunInvalid ? "Invalid gun value."
+                : isHozAngleInvalid ? "Invalid horizontal angle value."
+                : !Utility.CheckDistanceLimit(km) ? $"{Utility.GetDistanceLimitText(km)}"
+                : !Utility.CheckChargeLimit(charges) ? $"{Utility.GetChargeLimitText(charges)}"
+                : (angleWasProvided && !Utility.CheckHozAngleLimit(hozAngle)) ? $"{Utility.GetHozAngleLimitText(hozAngle)}"
+                : charges < minCharges ? $"Minimum charges for {km} km is {minCharges}." : null;
+
+            if (errorMessage == null) {
+                _runtime.Output(km: km, charges: charges, hozAngle: hozAngle, gunSelected: gun);
+                return;
+            }
+
+            AnsiConsole.MarkupLine($"[red]Error: {errorMessage}[/]");
         }
 
         Gun ReadGun() {

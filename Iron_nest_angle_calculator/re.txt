@@ -1,7 +1,6 @@
 git commit --allow-empty -m "Release vX.X.X"
 git push origin master
 
+gh release delete vX.X.X --yes
 git tag -d vX.X.X
 git push origin :refs/tags/vX.X.X
-git tag vX.X.X
-git push origin vX.X.X

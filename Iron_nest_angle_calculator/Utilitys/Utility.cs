@@ -43,7 +43,7 @@ namespace CalculateAngleViaDistanceIronNest.Utilitys {
             return true;
         }
         public static string GetDistanceLimitText(float distance) {
-            string text = distance > 30 ? "Distance can't be bigger than 30.00 km, you entered" : distance < 0.0005 ? "Distance can't be smaller than 0.0005 km, you entered" : "";
+            string text = distance > 30 ? $"Distance can't be bigger than 30.00 km, you entered {distance}" : distance < 0.0005 ? $"Distance can't be smaller than 0.0005 km, you entered {distance}" : "";
             return text;
         }
 
@@ -55,7 +55,7 @@ namespace CalculateAngleViaDistanceIronNest.Utilitys {
             return true;
         }
         public static string GetHozAngleLimitText(float hozAngle) {
-            string text = hozAngle > 360 ? "Horizontal angle can't be bigger than 360.00, you entered" : hozAngle < 0 ? "Horizontal angle can't be smaller than 0.00, you entered" : "";
+            string text = hozAngle > 360 ? $"Horizontal angle can't be bigger than 360.00, you entered {hozAngle}" : hozAngle < 0 ? $"Horizontal angle can't be smaller than 0.00, you entered {hozAngle}" : "";
             return text;
         }
 

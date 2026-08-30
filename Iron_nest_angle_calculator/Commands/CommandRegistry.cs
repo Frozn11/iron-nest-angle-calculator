@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Linq;
 
 namespace CalculateAngleViaDistanceIronNest.Commands {
+    class ExitException : Exception { }
     class CommandRegistry(AppState state, AppRuntime runtime) {
         private readonly AppState _state = state;
         private readonly AppRuntime _runtime = runtime;
@@ -28,6 +29,8 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 .SelectMany(c => c.Aliases.Select(alias => (alias, c.Info)))
                 .ToDictionary(x => x.alias, x => x.Info);
         }
+
+        static bool IsExit(string s) => string.Equals(s?.Trim(), "q", StringComparison.OrdinalIgnoreCase);
 
         // Command Handlers
         void HandleHelp(string[] parts) {
@@ -92,14 +95,23 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         }
 
         void HandleCalcMode(string[] parts) {
-            while (true) {
-                Gun gunResult = ReadGun();
-                AnsiConsole.MarkupLine($"[green]Selected gun: {gunResult}[/]");
-                float hozAngle = ReadHozAngle();
-                float km = ReadDistance();
-                int charges = ReadCharges(km);
+            try {
+                while (true) {
+                    AnsiConsole.WriteLine("Enter \"q\" to exit calculation mode.");
+                    Gun gunResult = ReadGun();
+                    AnsiConsole.MarkupLine($"[green]Selected gun: {gunResult}[/]");
+                    float hozAngle = ReadHozAngle();
+                    float km = ReadDistance();
+                    int charges = ReadCharges(km);
 
-                _runtime.Output(km, charges, hozAngle, gunResult);
+                    _runtime.Output(km, charges, hozAngle, gunResult);
+                }
+            }
+            catch (ExitException) {
+                AnsiConsole.MarkupLine("[yellow]Exited calculation mode.[/]");
+            }
+            catch (Exception e) {
+                AnsiConsole.MarkupLine($"[red]An error occurred: {e.Message}[/]");
             }
         }
 
@@ -133,50 +145,102 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
 
         Gun ReadGun() {
             // Console.WriteLine("Select Gun: Left(L) or Right(R) (can be skipped if not needed)");
-            var promt = new SelectionPrompt<Gun>()
-                .Title("Select Gun: Left(L) or Right(R) (can be skipped if not needed):")
-                .UseConverter(gun => gun == Gun.None ? "Skip" : gun.ToString())
-                .AddChoices(Gun.None, Gun.Left, Gun.Right);
-            return AnsiConsole.Prompt(promt);
+            string promt = AnsiConsole.Prompt(
+                new TextPrompt<string>("Select Gun: Left(L) or Right(R) (can be skipped if not needed):")
+                    .AllowEmpty()
+                    .Validate(str => {
+                        if (IsExit(str) || string.IsNullOrWhiteSpace(str)) return ValidationResult.Success();
+                        return str.Trim().ToUpperInvariant() switch {
+                            "L" or "LEFT" => ValidationResult.Success(),
+                            "R" or "RIGHT" => ValidationResult.Success(),
+                            _ => ValidationResult.Error("[red]Invalid gun selection. Please enter Left(L), Right(R) or leave blank to skip.[/]")
+                        };
+                    })
+            );
+            if (IsExit(promt)) throw new ExitException();
+            if (string.IsNullOrWhiteSpace(promt)) return Gun.None;
+
+            return promt.Trim().ToUpperInvariant() switch {
+                "L" or "LEFT" => Gun.Left,
+                "R" or "RIGHT" => Gun.Right,
+                _ => Gun.None
+            };
         }
 
         static float ReadHozAngle() {
-            return AnsiConsole.Prompt(
-                new TextPrompt<float>("Set horizontal angle from 0.00 to 360.00 (can be skipped if not needed):")
-                    .Culture(CultureInfo.InvariantCulture)
-                    .DefaultValue(-1f)
-                    .ShowDefaultValue(false)
-                    .Validate(angle => angle switch {
-                        <= -1 => ValidationResult.Success(), // skip sentinel
-                        _ when !Utility.CheckHozAngleLimit(angle) => ValidationResult.Error($"[red]{Utility.GetHozAngleLimitText(angle)} {Utility.F(angle)}[/]"),
-                        _ => ValidationResult.Success()
+            string input = AnsiConsole.Prompt(
+                new TextPrompt<string>("Set horizontal angle from 0.00 to 360.00 (can be skipped if not needed):")
+                    .AllowEmpty()
+                    .Validate(str => {
+                        if (IsExit(str) || string.IsNullOrWhiteSpace(str)) return ValidationResult.Success();
+                        if (!float.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out float hozAngle)) {
+                            return ValidationResult.Error("[red]Invalid angle value.[/]");
+                        }
+                        return Utility.CheckHozAngleLimit(hozAngle)
+                        ? ValidationResult.Success()
+                        : ValidationResult.Error($"[red]{Utility.GetHozAngleLimitText(hozAngle)}[/]");
                     })
             );
+            if (IsExit(input)) throw new ExitException();
+            return string.IsNullOrWhiteSpace(input) ? -1f : float.Parse(input, CultureInfo.InvariantCulture);
         }
 
+
         static float ReadDistance() {
-            return AnsiConsole.Prompt(
-                new TextPrompt<float>("Enter distance in km (min: 0.0005 km, max: 30.00 km):")
-                    .Culture(CultureInfo.InvariantCulture)
-                    .Validate(km => km switch {
-                        _ when !Utility.CheckDistanceLimit(km) => ValidationResult.Error($"[red]{Utility.GetDistanceLimitText(km)} {Utility.F(km)}[/]"),
-                        _ => ValidationResult.Success()
-                    })
-            );
+            while (true) {
+                string input = AnsiConsole.Prompt(
+                    new TextPrompt<string>("Enter distance in km (min: 0.0005 km, max: 30.00 km):")
+                        .AllowEmpty()
+                        .Validate(str => {
+                            if (IsExit(str) || string.IsNullOrWhiteSpace(str)) return ValidationResult.Success();
+                            if (!float.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out float km)) {
+                                return ValidationResult.Error("[red]Invalid distance value.[/]");
+                            }
+                            return Utility.CheckDistanceLimit(km)
+                            ? ValidationResult.Success()
+                            : ValidationResult.Error($"[red]{Utility.GetDistanceLimitText(km)}[/]");
+                        })
+                );
+                if (IsExit(input)) throw new ExitException();
+                if (float.TryParse(input, CultureInfo.InvariantCulture, out float km) && Utility.CheckDistanceLimit(km)) {
+                    return km;
+                }
+                AnsiConsole.MarkupLine($"[red]Invalid distance value.[/]");
+                continue;
+            }
         }
 
         static int ReadCharges(float km) {
             // minCharges assumes km <= 30 (enforced by ReadDistance) GetMinCharges
             // would return -1 otherwise, which this code doesn't currently handle.
             int minCharges = Calculator.GetMinCharges(km);
-            return AnsiConsole.Prompt(
-                new TextPrompt<int>($"Enter amount of charges (min: {minCharges}, max: 6):")
-                    .Validate(c => c switch {
-                        _ when c < minCharges => ValidationResult.Error($"[red]Too small, min charges are {minCharges}[/]"),
-                        _ when !Utility.CheckChargeLimit(c) => ValidationResult.Error($"[red]{Utility.GetChargeLimitText(c)}[/]"),
-                        _ => ValidationResult.Success()
-                    })
-            );
+            while (true) {
+                string input = AnsiConsole.Prompt(
+                    new TextPrompt<string>($"Enter amount of charges (min: {minCharges}, max: 6):")
+                        .AllowEmpty()
+                        .Validate(str => {
+                            if (IsExit(str) || string.IsNullOrWhiteSpace(str)) return ValidationResult.Success();
+                            if (!int.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges)) {
+                                return ValidationResult.Error("[red]Invalid charges value.[/]");
+                            }
+
+
+                            if (!Utility.CheckChargeLimit(charges)) {
+                                return ValidationResult.Error($"[red]{Utility.GetChargeLimitText(charges)}[/]");
+                            }
+                            if (charges < minCharges) {
+                                return ValidationResult.Error($"[red]Minimum charges for {km} km is {minCharges}.[/]");
+                            }
+                            return ValidationResult.Success();
+                        })
+                    );
+                if (IsExit(input)) throw new ExitException();
+                if (int.TryParse(input, NumberStyles.Integer, CultureInfo.InvariantCulture, out int charges) && Utility.CheckChargeLimit(charges)) {
+                    return charges;
+                }
+                AnsiConsole.MarkupLine($"[red]Invalid charges value.[/]");
+                continue;
+            }
         }
     }
 }

@@ -32,6 +32,11 @@ namespace CalculateAngleViaDistanceIronNest.Data {
         }
 
         public void ReturnSavedListTable() {
+            if (savedAnglesList.Count < 0) {
+                AnsiConsole.Markup("Error: list is empty");
+                return;
+            }
+
             var table = new Table()
                 .Border(new NoTopAsciiBorder())
                 .AddColumn("Index", col => col.RightAligned())

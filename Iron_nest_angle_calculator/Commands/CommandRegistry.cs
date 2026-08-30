@@ -18,13 +18,13 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         public Dictionary<string, CommandInfo> BuildCommandMap() {
             _commandsHolder = [
                 (["/help", "/h"], new(HandleHelp, "/help", "shows this list of commands")),
-                (["/remove", "/rem"], new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
+                (["/remove", "/rem"], new(HandleRemove, "/remove [[index]]", "gives an option to remove one of saved angles from a list")),
                 (["/list"], new(HandleList, "/list", "shows list of saved angles")),
-                (["/savelist"], new(HandleSaveList, "/savelist <true/false>", "enables/disables saving angles, but keeps old angles")),
+                (["/setsavelist", "/setsavel", "/setsl", "/ssl", "/savemlist"], new(HandleSetSaveList, "/setsavelist <true/false>", "enables/disables saving angles, but keeps old angles")),
                 (["/setmaxlist", "/setmaxl", "/setml", "/smaxl","/smlist", "/sml"], new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
                 (["/maxlist", "/maxl", "/mlist", "/ml"], new(HandleMaxList, "/maxlist", "returns max list")),
                 (["/calculatemode", "/calcmode", "/cm"], new(HandleCalcMode, "/calcmode", "starts calculation mode")),
-                (["/calculate", "/calc", "/c"], new(HandleCalculate, "Usage: /calc <km> <charges> [[gun: L/R]] [[hozAngle]]", "fast calculation")),
+                (["/calculate", "/calc", "/c"], new(HandleCalculate, "/calc <km> <charges> [[gun: L/R]] [[hozAngle]]", "fast calculation")),
             ];
             return _commandsHolder
                 .SelectMany(c => c.Aliases.Select(alias => (alias, c.Info)))
@@ -52,15 +52,9 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
             }
 
             if (string.IsNullOrEmpty(arg) || !int.TryParse(arg, out int index)) {
-                _state.ReturnSavedListTable();
-                AnsiConsole.MarkupLine("Enter an index to remove selected item");
-                string input = _runtime.CustomReadLine();
-                if (!int.TryParse(input, out index)) {
-                    AnsiConsole.MarkupLine("[red]Invalid index.[/]");
-                    return;
-                }
+                AnsiConsole.MarkupLine("[red]Error: Missing an index to remove selected item[/]");
+                return;
             }
-
             if (index >= 0 && index < _state.savedAnglesList.Count) {
                 _state.savedAnglesList.RemoveAt(index);
                 AnsiConsole.MarkupLine("[green]Item removed.[/]");
@@ -72,13 +66,14 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
 
         void HandleList(string[] parts) => _state.ReturnSavedListTable();
 
-        void HandleSaveList(string[] parts) {
+        void HandleSetSaveList(string[] parts) {
             string args = parts.Length > 1 ? parts[1].Trim() : null;
             if (Utility.TryParseBool(args, out bool saveListValue)) {
+                AnsiConsole.MarkupLine($"[green]Updated: SetSaveList have been set to {saveListValue}[/]");
                 _state.saveList = saveListValue;
             }
             else {
-                AnsiConsole.MarkupLine("[red]wrong value[/]");
+                AnsiConsole.MarkupLine("[red]Error: Needs to be true/false[/]");
             }
         }
 
@@ -89,10 +84,10 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
                 while (_state.savedAnglesList.Count > _state.maxSaveList) {
                     _state.savedAnglesList.RemoveAt(0);
                 }
-                AnsiConsole.MarkupLine($"[green]New max list set to: {_state.maxSaveList}[/]");
+                AnsiConsole.MarkupLine($"[green]Updated: New max list set to: {_state.maxSaveList}[/]");
             }
             else {
-                AnsiConsole.MarkupLine("[red]Error[/]");
+                AnsiConsole.MarkupLine("[red]Error: need to be an integer[/]");
             }
         }
 

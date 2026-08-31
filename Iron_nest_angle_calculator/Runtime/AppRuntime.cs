@@ -31,12 +31,14 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
                 }
             }
         }
-        public string CustomReadLine() {
+        public void CustomReadLine() {
             string input = AnsiConsole.Ask<string>("> ");
             if (input != null && input.StartsWith('/')) {
                 HandleCommand(input);
             }
-            return input;
+            else {
+                AnsiConsole.MarkupLine("[red]Error: use /help for list of commands[/]");
+            }
         }
 
 
@@ -54,8 +56,7 @@ namespace CalculateAngleViaDistanceIronNest.Runtime {
 
             _state.SaveNewAngle(velAngle, hozAngleConvert, charges, gunSelected, timeTravel);
 
-
-            if (_state.alwaysShowList) _state.ReturnSavedListTable();
+           _state.ReturnSavedListTable();
         }
 
         private static async Task Info() {

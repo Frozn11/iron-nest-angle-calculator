@@ -18,9 +18,8 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         public Dictionary<string, CommandInfo> BuildCommandMap() {
             _commandsHolder = [
                 (["/help", "/h"], new(HandleHelp, "/help", "shows this list of commands")),
-                (["/remove", "/rem"], new(HandleRemove, "/remove [[index]]", "gives an option to remove one of saved angles from a list")),
+                (["/remove", "/rem"], new(HandleRemove, "/remove <index>", "gives an option to remove one of saved angles from a list")),
                 (["/list"], new(HandleList, "/list", "shows list of saved angles")),
-                (["/setsavelist", "/setsavel", "/setsl", "/ssl", "/savemlist"], new(HandleSetSaveList, "/setsavelist <true/false>", "enables/disables saving angles, but keeps old angles")),
                 (["/setmaxlist", "/setmaxl", "/setml", "/smaxl","/smlist", "/sml"], new(HandleSetMaxList, "/setmaxlist <number>", "makes so it removes old saved angles when it gets bigger than max size list")),
                 (["/maxlist", "/maxl", "/mlist", "/ml"], new(HandleMaxList, "/maxlist", "returns max list")),
                 (["/calculatemode", "/calcmode", "/cm"], new(HandleCalcMode, "/calcmode", "starts calculation mode")),
@@ -65,17 +64,6 @@ namespace CalculateAngleViaDistanceIronNest.Commands {
         }
 
         void HandleList(string[] parts) => _state.ReturnSavedListTable();
-
-        void HandleSetSaveList(string[] parts) {
-            string args = parts.Length > 1 ? parts[1].Trim() : null;
-            if (Utility.TryParseBool(args, out bool saveListValue)) {
-                AnsiConsole.MarkupLine($"[green]Updated: SetSaveList have been set to {saveListValue}[/]");
-                _state.saveList = saveListValue;
-            }
-            else {
-                AnsiConsole.MarkupLine("[red]Error: Needs to be true/false[/]");
-            }
-        }
 
         void HandleSetMaxList(string[] parts) {
             string args = parts.Length > 1 ? parts[1].Trim() : null;

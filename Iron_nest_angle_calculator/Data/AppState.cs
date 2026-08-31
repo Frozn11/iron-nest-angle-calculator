@@ -19,15 +19,12 @@ namespace CalculateAngleViaDistanceIronNest.Data {
     public class AppState {
         public List<SavedAngle> savedAnglesList { get; } = [];
         public int maxSaveList { get; set; } = 6;
-        public bool saveList { get; set; } = true;
-        public bool alwaysShowList { get; set; } = true;
 
         public SavedAngle SaveNewAngle(float velAngle, float? hozAngle, int charges, Gun gun, float timeToTravel) {
             var saved = new SavedAngle { velAngle = velAngle, hozAngle = hozAngle, charges = charges, gunSelected = gun, timeToTrivel = timeToTravel };
-            if (saveList) {
                 if (savedAnglesList.Count >= maxSaveList) savedAnglesList.RemoveAt(0);
                 savedAnglesList.Add(saved);
-            }
+            
             return saved;
         }
 
